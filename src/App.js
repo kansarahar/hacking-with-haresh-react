@@ -1,12 +1,12 @@
-import Canvas from './components/Canvas/Canvas3d';
+import MainPage from './components/MainPage/MainPage';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        3D demo
+
       </header>
-      <Canvas></Canvas>
+      <MainPage></MainPage>
     </div>
   );
 }
