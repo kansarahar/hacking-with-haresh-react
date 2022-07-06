@@ -12,11 +12,6 @@ code {
     monospace;
 }
 
-canvas {
-  background: url('./assets/images/textures/background.jpg');
-  background-size: cover;
-}
-
 #main-page {
   display: flex;
   justify-content: flex-start;
