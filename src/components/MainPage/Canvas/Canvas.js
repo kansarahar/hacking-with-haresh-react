@@ -195,21 +195,23 @@ function Canvas(props) {
     canvasDivDOMElement.appendChild(stats.dom);
 
     // -------- animate -------- //
-    const animate = function () {
+    const animate = (time) => {
       requestAnimationFrame(animate);
       stats.begin();
-      ringPoints.rotation.y += 0.00005;
-      saturnBelt.rotation.y += 0.000005;
+      ringPoints.rotation.y = time * 2e-6;
+      saturnBelt.rotation.y = time * 2e-7;
       controls.update();
       renderer.render(scene, camera);
       stats.end();
     };
-    animate();
+    requestAnimationFrame(animate);
+
 
     // -------- clean up -------- //
     return function cleanup() {
       window.removeEventListener('resize', onWindowResize, false);
       canvasDivDOMElement.removeChild(renderer.domElement);
+      canvasDivDOMElement.removeChild(stats.dom);
     }
   });
 
