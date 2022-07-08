@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
+import Stats from 'three/examples/jsm/libs/stats.module';
 
 import backgroundImage from '../../../assets/images/textures/starsMilkyWay.jpg';
 import saturnTextureImage from '../../../assets/images/textures/saturnTexture.jpg';
@@ -16,25 +17,18 @@ function Canvas(props) {
   const generateRingPointCloudGeometry = (rmin, rmax, zspread, numPoints) => {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(numPoints * 3);
-    const colors = new Float32Array(numPoints * 3);
 
     for (let p = 0; p < numPoints; p++) {
       const theta = 2 * Math.random() * Math.PI;
       const r = rmin + (rmax - rmin) * Math.random();
       const z = zspread * (Math.random() - 0.5);
-      
-      const color = new THREE.Color( 0xffffff );
+
       positions[3 * p] = r * Math.cos(theta);
       positions[3 * p + 1] = r * Math.sin(theta);
       positions[3 * p + 2] = z;
-      
-      colors[3 * p] = color.r; 
-      colors[3 * p + 1] = color.g;
-      colors[3 * p + 2] = color.b;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.rotateX(-Math.PI/2);
     return geometry;
   };
@@ -58,12 +52,15 @@ function Canvas(props) {
     // -------- create scene -------- //
     const canvasDivDOMElement = document.getElementById( 'main-canvas-div' );
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
     const renderer = new THREE.WebGLRenderer({
-      alpha: true,
       antialias: true,
     });
     renderer.localClippingEnabled = true;
+    const clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(1, 0, 1), -5),
+      new THREE.Plane(new THREE.Vector3(-1, 0, 1), 10),
+    ];
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(-0.5, 1, 1);
     
@@ -79,28 +76,43 @@ function Canvas(props) {
     // -------- geometries -------- //
     const saturnGeometry = new THREE.SphereGeometry(60, 32, 32);
     const ringGeometry = generateSaturnRingGeometry(120, 180, 250, 1);
-    const ringPointsGeometry = generateRingPointCloudGeometry(150, 180, 0.01, 2000);
+    const ringPointsGeometry = generateRingPointCloudGeometry(120, 180, 1, 5000);
+
+    // -------- colors -------- //
+    const saturnEmissiveColor = new THREE.Color(0xffffff);
+    const saturnRingEmissiveColor = new THREE.Color(0xffffff);
+    const ringPointsColor = new THREE.Color(0xeaddca);
+    const teapotColor = new THREE.Color(0xffffff);
+    const asteroidColor = new THREE.Color(0xeaddca);
 
     // -------- materials -------- //
     const saturnMaterial = new THREE.MeshStandardMaterial({
       map: saturnTexture, 
-      emissive: new THREE.Color(0xffffff),
+      emissive: saturnEmissiveColor,
       emissiveIntensity: 0.2,
     });
     const ringMaterial = new THREE.MeshStandardMaterial({
       map: ringTexture,
       side: THREE.DoubleSide,
       transparent: true,
-      emissive: new THREE.Color(0xffffff),
+      emissive: saturnRingEmissiveColor,
       emissiveIntensity: 0.2,
     });
     const ringPointsMaterial = new THREE.PointsMaterial({
       size: 0.02,
-      vertexColors: true,
-      clippingPlanes: [
-        new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.1),
-        new THREE.Plane(new THREE.Vector3(0, 0, 1), 25),
-      ],
+      color: ringPointsColor,
+      clippingPlanes: clippingPlanes,
+    });
+    const teapotMaterial = new THREE.MeshStandardMaterial({
+      color: teapotColor,
+      roughness: 0,
+      metalness: 0,
+      clippingPlanes: clippingPlanes,
+    });
+    const asteroidMaterial = new THREE.MeshPhongMaterial({
+      color: asteroidColor,
+      flatShading: true,
+      clippingPlanes: clippingPlanes,
     });
 
     // -------- meshes -------- //
@@ -115,50 +127,45 @@ function Canvas(props) {
 
     const objLoader = new OBJLoader();
     objLoader.load(teapotOBJ, (teapotMesh) => {
-      const teapotMaterial = new THREE.MeshPhongMaterial({
-        color: new THREE.Color(0xffb6c1),
-        specularColor: new THREE.Color(0.25, 0.25, 0.25),
-        shininess: 96,
-      });
       teapotMesh.children.forEach((child) => { child.material = teapotMaterial; });
-      const r = 170;
+      const r = 171.5;
       const theta = Math.PI/3 - 0.005;
-      teapotMesh.position.set(r * Math.cos(theta), 1.2, r * Math.sin(theta));
+      teapotMesh.position.set(r * Math.cos(theta), 1.5, r * Math.sin(theta));
       teapotMesh.scale.set(0.05, 0.05, 0.05);
       teapotMesh.rotation.set(Math.PI/4 - Math.random(), -Math.PI/2, Math.PI/4 - Math.random());
       saturnBelt.add(teapotMesh);
     });
     objLoader.load(asteroidsOBJ, (asteroidsMesh) => {
-      const asteroidMaterial = new THREE.MeshLambertMaterial({
-        color: new THREE.Color(0xeaddca),
-        flatShading: true,
-      });
       const asteroidGeometries = [];
       asteroidsMesh.children.forEach((child) => { asteroidGeometries.push(child.geometry) });
-      asteroidGeometries.forEach((geometry) => { 
+      asteroidGeometries.forEach((geometry) => {
+        // center each geometry at (0,0,0) and make them all roughly 1m^3
         geometry.computeBoundingBox();
         geometry.center();
         const dimensions = new THREE.Vector3().subVectors(geometry.boundingBox.max, geometry.boundingBox.min);
-        const scaleFactor = 3 / (dimensions.x + dimensions.y + dimensions.z);
-        geometry.scale(scaleFactor, scaleFactor, scaleFactor);
-      });
-      asteroidGeometries.forEach((asteroidGeometry) => {
-        const count = 750;
-        const saturnBeltMesh = new THREE.InstancedMesh(asteroidGeometry, asteroidMaterial, count);
-        saturnBeltMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        const normalizationFactor = 3 / (dimensions.x + dimensions.y + dimensions.z);
+        geometry.scale(normalizationFactor, normalizationFactor, normalizationFactor);
+
+        // create instanced meshes for each asteroid geometry and add it to the belt
+        const count = 1500;
+        const asteroidInstancedMesh = new THREE.InstancedMesh(geometry, asteroidMaterial, count);
         const dummy = new THREE.Object3D();
         for (let i = 0; i < count; i++) {
-          const r = 150 + 30 * Math.random();
-          const theta = Math.random() * Math.PI / 2 + Math.PI/8;
-          const y = 1.5 * Math.random();
-          const scaleFactor = 0.15 * Math.random();
-          dummy.scale.set(scaleFactor, scaleFactor, scaleFactor);
+          const r = 170 + 10 * (Math.random() - 0.5);
+          const theta = Math.random() * Math.PI / 2 + Math.PI/4;
+          const y = 0.5 + 1.5 * Math.random();
+          const scaleFactor = 0.02;
+          dummy.scale.set(
+            scaleFactor * (0.9 + 0.2 * Math.random()),
+            scaleFactor * (0.9 + 0.2 * Math.random()),
+            scaleFactor * (0.9 + 0.2 * Math.random())
+          );
           dummy.position.set(r * Math.cos(theta), y, r * Math.sin(theta));
           dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
           dummy.updateMatrix();
-          saturnBeltMesh.setMatrixAt(i, dummy.matrix);
+          asteroidInstancedMesh.setMatrixAt(i, dummy.matrix);
         }
-        saturnBelt.add(saturnBeltMesh);
+        saturnBelt.add(asteroidInstancedMesh);
       });
       saturnSystem.add(saturnBelt);
     });
@@ -182,13 +189,20 @@ function Canvas(props) {
     }
     window.addEventListener('resize', onWindowResize, false);
 
+    // -------- stats -------- //
+
+    const stats = Stats();
+    canvasDivDOMElement.appendChild(stats.dom);
+
     // -------- animate -------- //
     const animate = function () {
       requestAnimationFrame(animate);
+      stats.begin();
       ringPoints.rotation.y += 0.00005;
       saturnBelt.rotation.y += 0.000005;
       controls.update();
       renderer.render(scene, camera);
+      stats.end();
     };
     animate();
 
