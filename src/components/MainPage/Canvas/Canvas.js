@@ -3,7 +3,7 @@ import { WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
 import createSaturnScenery from '../../../scenes/SaturnScene';
-
+import createTestCubeScene from '../../../scenes/TestCubeScene';
 
 function Canvas(props) {
 
@@ -19,7 +19,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvasParentDiv.clientWidth, canvasParentDiv.clientHeight);
 
-    const { scene, camera, animation } = createSaturnScenery(canvas);
+    const { scene, camera, animation } = createTestCubeScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
