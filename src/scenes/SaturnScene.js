@@ -9,7 +9,7 @@ import ringTextureImage from '../assets/images/textures/saturnRings.png';
 import teapotOBJ from '../assets/models/Teapot/Teapot.obj';
 import asteroidsOBJ from '../assets/models/Asteroid/Asteroids.obj';
 
-const createSaturnScenery = (canvas) => {
+const createSaturnScene = (canvas) => {
 
   // -------- helper functions -------- //
   const generateRingPointCloudGeometry = (rmin, rmax, zspread, numPoints) => {
@@ -178,4 +178,4 @@ const createSaturnScenery = (canvas) => {
   return { scene, camera, animation };
 }
 
-export default createSaturnScenery;
+export default createSaturnScene;

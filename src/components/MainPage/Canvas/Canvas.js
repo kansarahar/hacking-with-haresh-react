@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
-import createSaturnScenery from '../../../scenes/SaturnScene';
+import createSaturnScene from '../../../scenes/SaturnScene';
 import createTestCubeScene from '../../../scenes/TestCubeScene';
+import createTestMultiCubeScene from '../../../scenes/TestMultiCubeScene';
 
 function Canvas(props) {
 
