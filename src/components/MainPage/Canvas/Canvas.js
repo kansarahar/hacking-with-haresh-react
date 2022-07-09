@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
@@ -8,23 +8,25 @@ import createTestMultiCubeScene from '../../../scenes/TestMultiCubeScene';
 
 function Canvas(props) {
 
+  const canvasParentRef = useRef(null);
+
   useEffect(() => {
 
     // -------- create renderer -------- //
-    const canvasParentDiv = document.getElementById('main-canvas-div');
-    const canvas = document.getElementById('main-canvas');
-    const renderer = new WebGLRenderer({
-      canvas: canvas,
-      antialias: true,
-    });
+    const renderer = new WebGLRenderer({ antialias: true });
+    const canvas = renderer.domElement;
+    const canvasParent = canvasParentRef.current;
+    canvasParent.appendChild(canvas);
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
     renderer.localClippingEnabled = true;
-    renderer.setSize(canvasParentDiv.clientWidth, canvasParentDiv.clientHeight);
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
-    const { scene, camera, animation } = createTestCubeScene(canvas);
+    const { scene, camera, animation } = createSaturnScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
-    canvasParentDiv.appendChild(stats.dom);
+    canvasParent.appendChild(stats.dom);
 
     // -------- resize renderer -------- //
     // canvas.style.width = '100%';
@@ -54,14 +56,13 @@ function Canvas(props) {
 
     // -------- clean up -------- //
     return function cleanup() {
-      canvasParentDiv.removeChild(stats.dom);
+      canvasParent.removeChild(canvas);
+      canvasParent.removeChild(stats.dom);
     }
   });
 
   return (
-    <div id='main-canvas-div'>
-      <canvas id='main-canvas'></canvas>
-    </div>
+    <div ref={canvasParentRef} id='main-canvas-div'></div>
   );
 }
 
