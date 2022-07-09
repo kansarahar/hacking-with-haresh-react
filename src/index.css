@@ -16,3 +16,14 @@ code {
   display: flex;
   justify-content: flex-start;
 }
+
+#main-canvas-div {
+  width: 50vw;
+  height: 100vh;
+}
+
+#main-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

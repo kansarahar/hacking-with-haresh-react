@@ -12,7 +12,7 @@ import teapotOBJ from '../../../assets/models/Teapot/Teapot.obj';
 import asteroidsOBJ from '../../../assets/models/Asteroid/Asteroids.obj';
 
 function Canvas(props) {
-  
+
   // -------- helper functions -------- //
   const generateRingPointCloudGeometry = (rmin, rmax, zspread, numPoints) => {
     const geometry = new THREE.BufferGeometry();
@@ -50,22 +50,23 @@ function Canvas(props) {
   useEffect(() => {
 
     // -------- create scene -------- //
-    const canvasDivDOMElement = document.getElementById( 'main-canvas-div' );
+    const canvasParentDiv = document.getElementById('main-canvas-div');
+    const canvas = document.getElementById('main-canvas');
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+    const camera = new THREE.PerspectiveCamera(75, canvasParentDiv.clientWidth / canvasParentDiv.clientHeight, 0.01, 1000);
     const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
       antialias: true,
     });
     renderer.localClippingEnabled = true;
+    renderer.setSize(canvasParentDiv.clientWidth, canvasParentDiv.clientHeight);
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(-0.5, 1, 1);
     const clippingPlanes = [
       new THREE.Plane(new THREE.Vector3(1, 0, 1), -5),
       new THREE.Plane(new THREE.Vector3(-1, 0, 1), 10),
     ];
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(-0.5, 1, 1);
     
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    canvasDivDOMElement.appendChild(renderer.domElement);
 
     // -------- textures -------- //
     const textureLoader = new THREE.TextureLoader();
@@ -131,7 +132,7 @@ function Canvas(props) {
       const r = 171.5;
       const theta = Math.PI/3 - 0.005;
       teapotMesh.position.set(r * Math.cos(theta), 1.5, r * Math.sin(theta));
-      teapotMesh.scale.set(0.05, 0.05, 0.05);
+      teapotMesh.scale.set(0.01, 0.01, 0.01);
       teapotMesh.rotation.set(Math.PI/4 - Math.random(), -Math.PI/2, Math.PI/4 - Math.random());
       saturnBelt.add(teapotMesh);
     });
@@ -180,22 +181,30 @@ function Canvas(props) {
     
     camera.position.z = 100;
 
-    // -------- set event listeners -------- //
+    // -------- set controls -------- //
     const controls = new TrackballControls(camera, renderer.domElement);
-    const onWindowResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', onWindowResize, false);
 
     // -------- stats -------- //
-
     const stats = Stats();
-    canvasDivDOMElement.appendChild(stats.dom);
+    canvasParentDiv.appendChild(stats.dom);
+
+    // -------- resize renderer -------- //
+    // canvas.style.width = '100%';
+    // canvas.style.height = '100%';
+    // const resizeCanvasToParentSize = (camera) => {
+    //   const width = canvasParentDiv.clientWidth;
+    //   const height = canvasParentDiv.clientHeight;
+    //   if (canvas.width !== width || canvas.height !== height) {
+    //     camera.aspect = width / height;
+    //     camera.updateProjectionMatrix();
+    //     renderer.setSize(width, height, false);
+    //     renderer.render(scene, camera);
+    //   }
+    // }
 
     // -------- animate -------- //
     const animate = (time) => {
+      // resizeCanvasToParentSize(camera);
       requestAnimationFrame(animate);
       stats.begin();
       ringPoints.rotation.y = time * 2e-6;
@@ -209,14 +218,14 @@ function Canvas(props) {
 
     // -------- clean up -------- //
     return function cleanup() {
-      window.removeEventListener('resize', onWindowResize, false);
-      canvasDivDOMElement.removeChild(renderer.domElement);
-      canvasDivDOMElement.removeChild(stats.dom);
+    canvasParentDiv.removeChild(stats.dom);
     }
   });
 
   return (
-    <div id="main-canvas-div"/>
+    <div id='main-canvas-div'>
+      <canvas id='main-canvas'></canvas>
+    </div>
   );
 }
 
