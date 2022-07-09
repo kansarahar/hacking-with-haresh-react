@@ -20,31 +20,28 @@ function Canvas(props) {
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     renderer.localClippingEnabled = true;
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createSaturnScene(canvas);
+    const { scene, camera, animation } = createTestMultiCubeScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
     canvasParent.appendChild(stats.dom);
 
     // -------- resize renderer -------- //
-    // canvas.style.width = '100%';
-    // canvas.style.height = '100%';
-    // const resizeCanvasToParentSize = (camera) => {
-    //   const width = canvasParentDiv.clientWidth;
-    //   const height = canvasParentDiv.clientHeight;
-    //   if (canvas.width !== width || canvas.height !== height) {
-    //     camera.aspect = width / height;
-    //     camera.updateProjectionMatrix();
-    //     renderer.setSize(width, height, false);
-    //     renderer.render(scene, camera);
-    //   }
-    // }
+    const resizeCanvasToParentSize = (camera) => {
+      const width = canvasParent.clientWidth;
+      const height = canvasParent.clientHeight;
+      if (canvas.width !== width || canvas.height !== height) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+      }
+    }
 
     // -------- animate -------- //
     const animate = (time) => {
-      // resizeCanvasToParentSize(camera);
+      resizeCanvasToParentSize(camera);
       requestAnimationFrame(animate);
       stats.begin();
       animation(time);
