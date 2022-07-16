@@ -22,11 +22,11 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createTestMultiCubeScene(canvas);
+    const { scene, camera, animation } = createSaturnScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
-    canvasParent.appendChild(stats.dom);
+    // canvasParent.appendChild(stats.dom);
 
     // -------- resize renderer -------- //
     const resizeCanvasToParentSize = (camera) => {
@@ -54,12 +54,12 @@ function Canvas(props) {
     // -------- clean up -------- //
     return function cleanup() {
       canvasParent.removeChild(canvas);
-      canvasParent.removeChild(stats.dom);
+      // canvasParent.removeChild(stats.dom);
     }
   });
 
   return (
-    <div ref={canvasParentRef} id='main-canvas-div'></div>
+    <div ref={ canvasParentRef } id='canvas'></div>
   );
 }
 
