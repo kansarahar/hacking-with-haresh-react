@@ -22,7 +22,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createSaturnScene(canvas);
+    const { scene, camera, animation } = createTestCubeScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
@@ -59,7 +59,7 @@ function Canvas(props) {
   });
 
   return (
-    <div ref={ canvasParentRef } id='canvas'></div>
+    <div ref={ canvasParentRef } className='canvas'></div>
   );
 }
 

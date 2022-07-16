@@ -1,4 +1,4 @@
-import TopicsListItem from './TopicsListItem';
+import TopicsListItem from './TopicsList/TopicsListItem';
 
 function Topics(props) {
   const topics = [
@@ -10,7 +10,7 @@ function Topics(props) {
     return <TopicsListItem name={ topic } key={ index }></TopicsListItem>
   });
   return (
-    <div id='topics-list'>
+    <div className='topics-list'>
       { topics }
     </div>
   );

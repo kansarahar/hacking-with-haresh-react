@@ -1,7 +1,7 @@
-function Topic(props) {
+function TopicsListItem(props) {
   return (
     <div className='topics-list-item'>{ props.name }</div>
   );
 }
 
-export default Topic;
+export default TopicsListItem;

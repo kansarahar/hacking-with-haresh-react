@@ -3,7 +3,7 @@ import Navigation from './Navigation/Navigation';
 
 function MainPage(props) {
   return (
-    <div id='main-page'>
+    <div className='main-page'>
       <Navigation></Navigation>
       <Canvas></Canvas>
     </div>
