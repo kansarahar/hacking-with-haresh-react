@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react';
 import { WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
-import createSaturnScene from '../../../scenes/SaturnScene';
-import createTestCubeScene from '../../../scenes/TestCubeScene';
-import createTestMultiCubeScene from '../../../scenes/TestMultiCubeScene';
+import createSaturnScene from '../scenes/SaturnScene';
+import createTestCubeScene from '../scenes/TestCubeScene';
+import createTestMultiCubeScene from '../scenes/TestMultiCubeScene';
 
 function Canvas(props) {
 
@@ -22,7 +22,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createTestCubeScene(canvas);
+    const { scene, camera, animation } = createSaturnScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
@@ -59,7 +59,7 @@ function Canvas(props) {
   });
 
   return (
-    <div ref={ canvasParentRef } className='canvas'></div>
+    <div ref={ canvasParentRef } className='canvas h-100'></div>
   );
 }
 
