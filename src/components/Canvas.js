@@ -22,7 +22,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createSaturnScene(canvas);
+    const { scene, camera, animation } = createTestMultiCubeScene(canvas);
 
     // -------- stats -------- //
     const stats = Stats();
