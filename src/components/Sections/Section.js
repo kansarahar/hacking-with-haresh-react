@@ -3,7 +3,7 @@ import sectionContent from '../../content/sectionContent';
 import SectionItem from './SectionItem';
 
 function Section(props) {
-  const sectionObj = sectionContent.find((elem) => elem.section = props.section);
+  const sectionObj = sectionContent.find((elem) => elem.section === props.activeSection);
   const content = sectionObj.content.map((obj, index) => {
     return (
       <SectionItem
@@ -18,7 +18,6 @@ function Section(props) {
       </SectionItem>
     )
   });
-  console.log(content);
   return (
     <div className='accordion' id={ 'accordion-' + sectionObj.key }>
       { content }

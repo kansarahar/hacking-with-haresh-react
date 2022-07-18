@@ -1,11 +1,11 @@
 import Canvas from './Canvas';
-import Section from './contentComponents/Section';
+import Section from './Sections/Section';
 
 function MainContent(props) {
   return (
     <div className='main-content h-100'>
-      <h2 className='section-title'>{ props.title }</h2>
-      <Section section='About Me'></Section>
+      <h2 className='section-title'>{ props.activeSection }</h2>
+      <Section activeSection={ props.activeSection }></Section>
     </div>
   );
 }

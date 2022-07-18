@@ -1,5 +1,5 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
-/* @import 'bootswatch/dist/slate/bootstrap.min.css'; */
+/* @import 'bootswatch/dist/darkly/bootstrap.min.css'; */
 
 body {
   margin: 0;
@@ -22,14 +22,6 @@ canvas {
   display: block;
 }
 
-img {
-  width: 100%;
-}
-
-.h-90 {
-  height: 90%;
-}
-
 .app {
   height: 100vh;
 }
@@ -44,10 +36,6 @@ img {
   height: 90%;
 }
 
-.blue {
-  background-color: blue;
-}
-
-.red {
-  background-color: red;
+.accordion-image {
+  width: 100%;
 }
