@@ -1,4 +1,3 @@
-import Canvas from './Canvas';
 import Section from './Sections/Section';
 
 function MainContent(props) {
