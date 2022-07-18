@@ -1,5 +1,5 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
-/* @import 'bootswatch/dist/darkly/bootstrap.min.css'; */
+/* @import 'bootswatch/dist/minty/bootstrap.min.css'; */
 
 body {
   margin: 0;
@@ -22,8 +22,17 @@ canvas {
   display: block;
 }
 
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .app {
   height: 100vh;
+}
+
+.section-title {
+  margin-bottom: 20px;
 }
 
 .content-container {
@@ -38,4 +47,14 @@ canvas {
 
 .accordion-image {
   width: 100%;
+  box-shadow: 0px 0px 3px black;
+}
+
+.accordion-body-content {
+  display: flex;
+  align-items: center;
+}
+
+.accordion-body-goto-icon {
+  min-height: 100px;
 }

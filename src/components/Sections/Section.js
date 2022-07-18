@@ -14,6 +14,7 @@ function Section(props) {
         body={ obj.body }
         image={ obj.image }
         imageAlt={ obj.imageAlt }
+        link = { obj.link }
       >
       </SectionItem>
     )
