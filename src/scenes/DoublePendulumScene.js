@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
+import { DoublePendulumSystem } from '../utils/physics';
 
 const createDoublePendulumScene = (canvas, renderer) => {
-  // -------- configuration -------- //
-  let [l1, l2, t1, t2] = [1, 1, 0, 0];
+  // -------- set up double pendulum -------- //
+  const doublePendulum = new DoublePendulumSystem([1, 0.5, 0, 0]);
 
   // -------- materials -------- //
   const material1 = new THREE.MeshPhysicalMaterial({
@@ -25,14 +26,15 @@ const createDoublePendulumScene = (canvas, renderer) => {
 
   // -------- gui -------- //
   const gui = new GUI();
-  const positionsFolder = gui.addFolder('Positions');
+  const paramsFolder = gui.addFolder('Parameters');
   const material1Folder = gui.addFolder('Material 1');
   const material2Folder = gui.addFolder('Material 2');
-  const positionsData = {
-    'length 1': 1,
-    'length 2': 1,
-    'theta 1': 0,
-    'theta 2': 0,
+  const pendulumParams = {
+    'mass 1': doublePendulum.m1,
+    'mass 2': doublePendulum.m2,
+    'length 1': doublePendulum.l1,
+    'length 2': doublePendulum.l2,
+    'g': doublePendulum.g,
   };
   const material1Data = {
     'color 1': material1.color.getHex(),
@@ -48,10 +50,11 @@ const createDoublePendulumScene = (canvas, renderer) => {
     'reflectivity 2': material2.reflectivity,
     'clearcoat 2': material2.clearcoat,
   };
-  positionsFolder.add(positionsData, 'length 1', 0.25, 2).step(0.25).onChange((length) => l1 = length);
-  positionsFolder.add(positionsData, 'length 2', 0.25, 2).step(0.25).onChange((length) => l2 = length);
-  positionsFolder.add(positionsData, 'theta 1', -Math.PI/2, Math.PI/2).step(Math.PI/20).onChange((angle) => t1 = angle);
-  positionsFolder.add(positionsData, 'theta 2', -Math.PI/2, Math.PI/2).step(Math.PI/20).onChange((angle) => t2 = angle);
+  paramsFolder.add(pendulumParams, 'mass 1', 0.25, 2).step(0.25).onChange((mass) => doublePendulum.m1 = mass);
+  paramsFolder.add(pendulumParams, 'mass 2', 0.25, 2).step(0.25).onChange((mass) => doublePendulum.m2 = mass);
+  paramsFolder.add(pendulumParams, 'length 1', 0.25, 2).step(0.25).onChange((length) => doublePendulum.l1 = length);
+  paramsFolder.add(pendulumParams, 'length 2', 0.25, 2).step(0.25).onChange((length) => doublePendulum.l2 = length);
+  paramsFolder.add(pendulumParams, 'length 2', 0.25, 2).step(0.25).onChange((length) => doublePendulum.l2 = length);
   material1Folder.addColor(material1Data, 'color 1').onChange((color) => material1.color.setHex(color));
   material2Folder.addColor(material2Data, 'color 2').onChange((color) => material2.color.setHex(color));
   material1Folder.add(material1Data, 'roughness 1', 0, 1).step(0.01).onChange((roughness) => material1.roughness = roughness);
@@ -88,7 +91,9 @@ const createDoublePendulumScene = (canvas, renderer) => {
   
   // -------- animation -------- //
   const animation = (time) => {
-    
+    const [t1, t2, w1, w2] = doublePendulum.state;
+    const [l1, l2] = [doublePendulum.l1, doublePendulum.l2];
+
     const sx1 = l1 * Math.sin(t1);
     const sy1 = l1 * Math.cos(t1);
     const sx2 = l1 * Math.sin(t1) + l2 * Math.sin(t2);
@@ -106,6 +111,9 @@ const createDoublePendulumScene = (canvas, renderer) => {
     cylinderMesh2.scale.y = l2;
     cylinderMesh1.position.set(cx1, -cy1, 0);
     cylinderMesh2.position.set(cx2, -cy2, 0);
+
+    const nextState = doublePendulum.nextState(0.02);
+    doublePendulum.setState(nextState);
     
     controls.update();
   }
