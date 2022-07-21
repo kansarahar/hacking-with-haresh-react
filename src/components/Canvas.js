@@ -5,7 +5,7 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import createSaturnScene from '../scenes/SaturnScene';
 import createTestCubeScene from '../scenes/TestCubeScene';
 import createTestMultiCubeScene from '../scenes/TestMultiCubeScene';
-import createDoublePendulumScene from '../scenes/DoublePendulumScene';
+import createNewtonCradleScene from '../scenes/NewtonCradleScene';
 
 function Canvas(props) {
 
@@ -23,7 +23,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createDoublePendulumScene(canvas, renderer);
+    const { scene, camera, animation } = createNewtonCradleScene(canvas, renderer);
 
     // -------- stats -------- //
     const stats = Stats();
