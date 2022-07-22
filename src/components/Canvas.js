@@ -6,7 +6,7 @@ import createSaturnScene from '../scenes/SaturnScene';
 import createTestCubeScene from '../scenes/TestCubeScene';
 import createTestMultiCubeScene from '../scenes/TestMultiCubeScene';
 import createNewtonCradleScene from '../scenes/NewtonCradleScene';
-import createNoiseScene from '../scenes/NoiseScene';
+import createAsteroidScene from '../scenes/AsteroidScene';
 
 function Canvas(props) {
 
@@ -24,7 +24,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createNoiseScene(canvas, renderer);
+    const { scene, camera, animation } = createAsteroidScene(canvas, renderer);
 
     // -------- stats -------- //
     const stats = Stats();
