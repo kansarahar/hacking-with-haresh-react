@@ -9,6 +9,38 @@ import ringTextureImage from '../assets/images/textures/saturnRings.png';
 import teapotOBJ from '../assets/models/Teapot/Teapot.obj';
 import asteroidsOBJ from '../assets/models/Asteroid/Asteroids.obj';
 
+class AsteroidBufferGeometry extends THREE.SphereBufferGeometry {
+  // -------- modify geometry -------- //
+  constructor(...args) {
+    super(...args);
+    const positions = this.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      const [x, y, z] = [positions[i], positions[i+1], positions[i+2]];
+  
+      let r = Math.sqrt(x**2 + y**2 + z**2);
+      let theta = Math.acos(y / r);
+      let phi = (x !== 0) ? Math.atan2(z, x) : Math.sign(z) * Math.PI / 2;
+      
+      const maxRadialVariation = 0.2;
+      const maxAngularVariation = 0.2;
+      if (Math.abs(phi) < Math.PI - 0.2
+        && Math.abs(theta) > 0.1
+        && Math.abs(theta) < Math.PI - 0.1
+      ) {
+        r += (2 * Math.random() - 1) * maxRadialVariation;
+        theta += (2 * Math.random() - 1) * maxAngularVariation;
+        phi += (2 * Math.random() - 1) * maxAngularVariation;
+      }
+  
+      positions[i] = r * Math.sin(theta) * Math.cos(phi);
+      positions[i + 1] = r * Math.cos(theta);
+      positions[i + 2] = r * Math.sin(theta) * Math.sin(phi);
+  
+    }
+    this.computeVertexNormals();
+  }
+};
+
 const createSaturnScene = (canvas) => {
 
   // -------- helper functions -------- //
@@ -118,44 +150,36 @@ const createSaturnScene = (canvas) => {
     const r = 171.5;
     const theta = Math.PI/3 - 0.005;
     teapotMesh.position.set(r * Math.cos(theta), 1.5, r * Math.sin(theta));
-    teapotMesh.scale.set(0.01, 0.01, 0.01);
+    teapotMesh.scale.set(0.02, 0.02, 0.02);
     teapotMesh.rotation.set(Math.PI/4 - Math.random(), -Math.PI/2, Math.PI/4 - Math.random());
     saturnBelt.add(teapotMesh);
   });
-  objLoader.load(asteroidsOBJ, (asteroidsMesh) => {
-    const asteroidGeometries = [];
-    asteroidsMesh.children.forEach((child) => { asteroidGeometries.push(child.geometry) });
-    asteroidGeometries.forEach((geometry) => {
-      // center each geometry at (0,0,0) and make them all roughly 1m^3
-      geometry.computeBoundingBox();
-      geometry.center();
-      const dimensions = new THREE.Vector3().subVectors(geometry.boundingBox.max, geometry.boundingBox.min);
-      const normalizationFactor = 3 / (dimensions.x + dimensions.y + dimensions.z);
-      geometry.scale(normalizationFactor, normalizationFactor, normalizationFactor);
 
-      // create instanced meshes for each asteroid geometry and add it to the belt
-      const count = 1500;
-      const asteroidInstancedMesh = new THREE.InstancedMesh(geometry, asteroidMaterial, count);
-      const dummy = new THREE.Object3D();
-      for (let i = 0; i < count; i++) {
-        const r = 170 + 10 * (Math.random() - 0.5);
-        const theta = Math.random() * Math.PI / 2 + Math.PI/4;
-        const y = 0.5 + 1.5 * Math.random();
-        const scaleFactor = 0.02;
-        dummy.scale.set(
-          scaleFactor * (0.9 + 0.2 * Math.random()),
-          scaleFactor * (0.9 + 0.2 * Math.random()),
-          scaleFactor * (0.9 + 0.2 * Math.random())
-        );
-        dummy.position.set(r * Math.cos(theta), y, r * Math.sin(theta));
-        dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-        dummy.updateMatrix();
-        asteroidInstancedMesh.setMatrixAt(i, dummy.matrix);
-      }
-      saturnBelt.add(asteroidInstancedMesh);
-    });
-    saturnSystem.add(saturnBelt);
+  const asteroidGeometries = [];
+  for (let i = 0; i < 8; i++) { asteroidGeometries.push(new AsteroidBufferGeometry(1, 6, 6)); }
+  console.log(asteroidGeometries);
+  const count = 1500;
+  asteroidGeometries.forEach((geometry) => {
+    const asteroidInstancedMesh = new THREE.InstancedMesh(geometry, asteroidMaterial, count);
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      const r = 170 + 10 * (Math.random() - 0.5);
+      const theta = Math.random() * Math.PI / 2 + Math.PI/4;
+      const y = 0.5 + 1.5 * Math.random();
+      const scaleFactor = 0.02;
+      dummy.scale.set(
+        scaleFactor * (0.75 + 0.5 * Math.random()),
+        scaleFactor * (0.75 + 0.5 * Math.random()),
+        scaleFactor * (0.75 + 0.5 * Math.random())
+      );
+      dummy.position.set(r * Math.cos(theta), y, r * Math.sin(theta));
+      dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      dummy.updateMatrix();
+      asteroidInstancedMesh.setMatrixAt(i, dummy.matrix);
+    }
+    saturnBelt.add(asteroidInstancedMesh);
   });
+  saturnSystem.add(saturnBelt);
 
   saturnSystem.position.set(-85, 10, -50);
   saturnSystem.rotation.set(-0.065, 0, -0.25);

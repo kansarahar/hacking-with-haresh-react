@@ -24,7 +24,7 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createAsteroidScene(canvas, renderer);
+    const { scene, camera, animation } = createSaturnScene(canvas, renderer);
 
     // -------- stats -------- //
     const stats = Stats();
