@@ -8,21 +8,28 @@ function Navigation(props) {
   const navItems = sectionContent.map((elem, index) => {
     return (
       <li
-        className={ props.activeSection === elem.section ? 'nav-item nav-link active' : 'nav-item nav-link' }
+        className='nav-item'
         key={ index }
         onClick={ handleClick }
       >
-        <span>{ elem.section }</span>
+        <span
+          className={ props.activeSection === elem.section ? 'nav-link active' : 'nav-link' }
+        >
+          { elem.section }
+        </span>
       </li>
     );
   });
 
   return (
-    <nav className='navbar navbar-expand-lg fixed-top navbar-dark bg-dark'>
+    <nav className='navbar navbar-expand-md fixed-top navbar-dark bg-dark'>
       <div className='container'>
         <span className='navbar-brand'>Hacking with Haresh</span>
-        <div className='collapse navbar-collapse'>
-          <ul className='navbar-nav'>
+        <button className='navbar-toggler' type='button' data-bs-toggle='collapse' data-bs-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation'>
+          <span className='navbar-toggler-icon'></span>
+        </button>
+        <div className='collapse navbar-collapse' id='navbarSupportedContent'>
+          <ul className='navbar-nav me-auto mb-2 mb-md-0'>
             { navItems }
           </ul>
         </div>

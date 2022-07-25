@@ -43,7 +43,7 @@ const sectionContent = [
         link: 'https://www.linkedin.com/in/kansarahar/',
         body: `
           <div>
-            I am currently working for Capital One as a data engineer, but I also have prior experience as a front-end and back-end developer.
+            I am currently working for Capital One as a data engineer, and I also have prior experience as a front-end and back-end developer.
             Check out my <span href=#>LinkedIn</span> page for more info!
           </div>
         `,

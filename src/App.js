@@ -10,7 +10,7 @@ function App() {
     <div className='app container-fluid'>
       <div className='row nav'><Navigation activeSection={ activeSection } setActiveSection={ setActiveSection }></Navigation></div>
       <div className='container content-container'>
-        <div className='row h-100 d-flex align-items-center'>
+        <div className='row h-100 d-flex align-items-center container'>
           <span className='container-fluid col-sm-6 content-item'><MainContent activeSection={ activeSection }></MainContent></span>
           <span className='container-fluid col-sm-1 content-item d-flex'><span className='vr' /></span>
           <span className='container-fluid col-sm-5 content-item'><Canvas activeSection={ activeSection }></Canvas></span>

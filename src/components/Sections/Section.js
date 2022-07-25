@@ -1,4 +1,3 @@
-import 'bootstrap/js/dist/collapse';
 import sectionContent from '../../content/sectionContent';
 import SectionItem from './SectionItem';
 
