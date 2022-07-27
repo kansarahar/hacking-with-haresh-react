@@ -4,6 +4,9 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
 // import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import Room from '../assets/models/Room/Room.glb';
+
 const createNewtonCradleScene = (canvas, renderer) => {
   
   const physics = {
@@ -146,9 +149,20 @@ const createNewtonCradleScene = (canvas, renderer) => {
 
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   scene.background = backgroundColor;
-  scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  // scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
   
-  scene.add(cradle);
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load(Room, (gltf) => {
+    scene.add(gltf.scene);
+  });
+
+  const pointLight = new THREE.PointLight(0xffffff, 0.5);
+  pointLight.position.set(0, 2, 2);
+  const pointLightHelper = new THREE.PointLightHelper(pointLight);
+  scene.add(pointLight);
+  scene.add(pointLightHelper);
+
+  // scene.add(cradle);
   camera.position.z = 14;
   camera.position.y = 8;
   camera.position.x = -7;
