@@ -4,6 +4,31 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
 // import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
+const backgroundColor = new THREE.Color(0xfcfcfc);
+
+const createShadow = () => {
+  const dim = 128;
+  const size = dim ** 2;
+  const data = new Uint8Array(4 * size);
+  const initialColor = 180/255, finalColor = backgroundColor.r;
+  for (let i = 0; i < size; i++) {
+    const y = 2 * (i - i % dim) / dim**2 - 1;
+    const x = 2 * (i % dim) / dim - 1;
+    const p = Math.sqrt(x**4 + y**4);
+    let c = (finalColor - initialColor) * p + initialColor;
+    if (c > finalColor) { c = finalColor; }
+    if (c < initialColor) { c = initialColor; }
+    const stride = i * 4;
+    data[ stride ] = Math.floor(c * 255); // r
+    data[ stride + 1 ] = Math.floor(c * 255);; // g
+    data[ stride + 2 ] = Math.floor(c * 255);; // b
+    data[ stride + 3 ] = 255; // a
+  }
+  const texture = new THREE.DataTexture(data, dim, dim);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 const createNewtonCradleScene = (canvas, renderer) => {
   
   const physics = {
@@ -11,7 +36,8 @@ const createNewtonCradleScene = (canvas, renderer) => {
     maxAngle: 0.5,
   };
   
-  const backgroundColor = new THREE.Color(0xfcfcfc);
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  const envMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
   
   // -------- materials -------- //
   const ballMaterial = new THREE.MeshPhysicalMaterial({
@@ -20,6 +46,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
     roughness: 0.1,
     reflectivity: 0,
     clearcoat: 0,
+    envMap
   });
   const platformMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x1c1c1c,
@@ -27,6 +54,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
     roughness: 1,
     reflectivity: 0,
     clearcoat: 0.2,
+    envMap
   });
   const stringMaterial = new THREE.LineBasicMaterial({
     color: 0xa6a6a6,
@@ -85,6 +113,8 @@ const createNewtonCradleScene = (canvas, renderer) => {
   // -------- scene -------- //
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.01, 1000);
+
+  scene.background = backgroundColor;
   
   const sphereGeometry = new THREE.SphereGeometry(1);
   const cylinderGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8, 1, true);
@@ -92,6 +122,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1, -1, 0), new THREE.Vector3(-1, 1, 0), new THREE.Vector3(1, 1, 0))
   const arcGeometry = new THREE.TubeGeometry(arcCurve, 16, 0.2, 8);
 
+  // -------- Newton's Cradle -------- //
   const cradle = new THREE.Group();
   cradle.position.set(0, -2, 0);
   const platform = new THREE.Mesh(boxGeometry, platformMaterial);
@@ -117,7 +148,6 @@ const createNewtonCradleScene = (canvas, renderer) => {
     rightArc.position.set(5, i[1]-1, i[2]);
     rails.add(leftArc);
     rails.add(rightArc);
-
   });
   cradle.add(rails);
   rails.scale.set(0.8, 0.8, 0.8);
@@ -144,11 +174,16 @@ const createNewtonCradleScene = (canvas, renderer) => {
   const ball1 = ballComponents[0];
   const ball2 = ballComponents[1];
 
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
-  scene.background = backgroundColor;
-  scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  const shadowTexture = createShadow();
+  const shadowGeometry = new THREE.PlaneGeometry();
+  const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, map: shadowTexture });
+  const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
+  shadowMesh.rotation.x = -Math.PI / 2;
+  shadowMesh.scale.set(13, 7, 7);
+  shadowMesh.position.y = -5;
   
   scene.add(cradle);
+  scene.add(shadowMesh);
   camera.position.z = 14;
   camera.position.y = 8;
   camera.position.x = -7;
