@@ -16,6 +16,9 @@ const createNewtonCradleScene = (canvas, renderer) => {
   
   const backgroundColor = new THREE.Color(0xfcfcfc);
   
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  const envMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture; 
+  
   // -------- materials -------- //
   const ballMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x8c8c8c,
@@ -23,6 +26,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
     roughness: 0.1,
     reflectivity: 0,
     clearcoat: 0,
+    envMap
   });
   const platformMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x1c1c1c,
@@ -30,6 +34,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
     roughness: 1,
     reflectivity: 0,
     clearcoat: 0.2,
+    envMap
   });
   const stringMaterial = new THREE.LineBasicMaterial({
     color: 0xa6a6a6,
@@ -88,7 +93,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   // -------- scene -------- //
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.01, 1000);
-  
+
   const sphereGeometry = new THREE.SphereGeometry(1);
   const cylinderGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8, 1, true);
   const boxGeometry = new RoundedBoxGeometry(12, 1, 6, 2, 0.2);
@@ -144,12 +149,15 @@ const createNewtonCradleScene = (canvas, renderer) => {
     rails.add(ballComponent);
   });
 
+  cradle.scale.set(0.03, 0.03, 0.03);
+  cradle.position.set(0.85, 0.81, 0);
+  cradle.rotation.y = Math.PI/2;
+
   const ball1 = ballComponents[0];
   const ball2 = ballComponents[1];
 
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+
   scene.background = backgroundColor;
-  // scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
   
   const gltfLoader = new GLTFLoader();
   gltfLoader.load(Room, (gltf) => {
@@ -162,7 +170,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   scene.add(pointLight);
   scene.add(pointLightHelper);
 
-  // scene.add(cradle);
+  scene.add(cradle);
   camera.position.z = 14;
   camera.position.y = 8;
   camera.position.x = -7;
