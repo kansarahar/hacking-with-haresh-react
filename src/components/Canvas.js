@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { WebGLRenderer } from 'three';
-import Stats from 'three/examples/jsm/libs/stats.module';
+// import Stats from 'three/examples/jsm/libs/stats.module';
 
 import createNewtonCradleScene from '../scenes/NewtonCradleScene';
 
@@ -20,10 +20,10 @@ function Canvas(props) {
     renderer.localClippingEnabled = true;
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
-    const { scene, camera, animation } = createNewtonCradleScene(canvas, renderer);
+    const { scene, camera, animation, destroy } = createNewtonCradleScene(canvas, renderer);
 
     // -------- stats -------- //
-    const stats = Stats();
+    // const stats = Stats();
     // canvasParent.appendChild(stats.dom);
 
     // -------- resize renderer -------- //
@@ -38,21 +38,28 @@ function Canvas(props) {
     }
 
     // -------- animate -------- //
+    let aFrameReq;
     const animate = (time) => {
       resizeCanvasToParentSize(camera);
-      requestAnimationFrame(animate);
-      stats.begin();
+      aFrameReq = requestAnimationFrame(animate);
+      // stats.begin();
       animation(time);
       renderer.render(scene, camera);
-      stats.end();
+      // stats.end();
     };
-    requestAnimationFrame(animate);
+    aFrameReq = requestAnimationFrame(animate);
 
 
     // -------- clean up -------- //
     return function cleanup() {
       canvasParent.removeChild(canvas);
       // canvasParent.removeChild(stats.dom);
+      cancelAnimationFrame(aFrameReq);
+      if (destroy) {
+        destroy();
+        renderer.dispose();
+        canvas.remove();
+      }
     }
   });
 

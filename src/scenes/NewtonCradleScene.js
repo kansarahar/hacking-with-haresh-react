@@ -119,7 +119,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   const sphereGeometry = new THREE.SphereGeometry(1);
   const cylinderGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8, 1, true);
   const boxGeometry = new RoundedBoxGeometry(12, 1, 6, 2, 0.2);
-  const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1, -1, 0), new THREE.Vector3(-1, 1, 0), new THREE.Vector3(1, 1, 0))
+  const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1, -1, 0), new THREE.Vector3(-1, 1, 0), new THREE.Vector3(1, 1, 0));
   const arcGeometry = new THREE.TubeGeometry(arcCurve, 16, 0.2, 8);
 
   // -------- Newton's Cradle -------- //
@@ -199,7 +199,25 @@ const createNewtonCradleScene = (canvas, renderer) => {
     controls.update();
   }
 
-  return { scene, camera, animation };
+  const destroy = () => {
+    ballMaterial.dispose();
+    platformMaterial.dispose();
+    stringMaterial.dispose();
+    shadowMaterial.dispose();
+
+    sphereGeometry.dispose();
+    cylinderGeometry.dispose();
+    boxGeometry.dispose();
+    arcGeometry.dispose();
+    stringGeometry.dispose();
+    shadowGeometry.dispose();
+
+    shadowTexture.dispose();
+
+    controls.dispose();
+  }
+
+  return { scene, camera, animation, destroy };
 }
 
 export default createNewtonCradleScene;
