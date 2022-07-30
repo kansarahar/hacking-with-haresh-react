@@ -6,7 +6,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 
 const backgroundColor = new THREE.Color(0xfcfcfc);
 
-const createShadow = () => {
+const createShadowTexture = () => {
   const dim = 128;
   const size = dim ** 2;
   const data = new Uint8Array(4 * size);
@@ -31,13 +31,16 @@ const createShadow = () => {
 
 const createNewtonCradleScene = (canvas, renderer) => {
   
-  const physics = {
-    rate: 3,
-    maxAngle: 0.5,
-  };
-  
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   const envMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  
+  
+  
+  // -------- scene -------- //
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.01, 1000);
+  
+  scene.background = backgroundColor;
   
   // -------- materials -------- //
   const ballMaterial = new THREE.MeshPhysicalMaterial({
@@ -61,68 +64,14 @@ const createNewtonCradleScene = (canvas, renderer) => {
     linewidth: 1,
   });
 
-  // -------- gui -------- //
-  // const gui = new GUI();
-  // const physicsFolder = gui.addFolder('Physics');
-  // const backgroundFolder = gui.addFolder('Background');
-  // const ballMaterialFolder = gui.addFolder('Ball Material');
-  // const platformMaterialFolder = gui.addFolder('Platform Material');
-  // const stringMaterialFolder = gui.addFolder('String Material');
-
-  // const backgroundData = {
-  //   'color': backgroundColor.getHex(),
-  // };
-  // const ballMaterialData = {
-  //   'color': ballMaterial.color.getHex(),
-  //   'roughness': ballMaterial.roughness,
-  //   'metalness': ballMaterial.metalness,
-  //   'reflectivity': ballMaterial.reflectivity,
-  //   'clearcoat': ballMaterial.clearcoat,
-  // };
-  // const platformMaterialData = {
-  //   'color': platformMaterial.color.getHex(),
-  //   'roughness': platformMaterial.roughness,
-  //   'metalness': platformMaterial.metalness,
-  //   'reflectivity': platformMaterial.reflectivity,
-  //   'clearcoat': platformMaterial.clearcoat,
-  // };
-  // const stringMaterialData = {
-  //   'color': stringMaterial.color.getHex(),
-  //   'linewidth': stringMaterial.linewidth,
-  // };
-
-  // const ballMaterialInfo = { folder: ballMaterialFolder, data: ballMaterialData, material: ballMaterial };
-  // const platformMaterialInfo = { folder: platformMaterialFolder, data: platformMaterialData, material: platformMaterial };
-  // const stringMaterialInfo = { folder: stringMaterialFolder, data: stringMaterialData, material: stringMaterial };
-
-  // physicsFolder.add(physics, 'rate', 0, 10).step(0.1);
-  // physicsFolder.add(physics, 'maxAngle', 0, Math.PI/2).step(0.1);
-  // backgroundFolder.addColor(backgroundData, 'color').onChange(color => backgroundColor.setHex(color));
-  // [ballMaterialInfo, platformMaterialInfo].forEach((info) => {
-  //   const { folder, data, material } = info;
-  //   folder.addColor(data, 'color').onChange(color => material.color.setHex(color));
-  //   folder.add(data, 'roughness', 0, 1).step(0.01).onChange(roughness => material.roughness = roughness);
-  //   folder.add(data, 'metalness', 0, 1).step(0.01).onChange(metalness => material.metalness = metalness);
-  //   folder.add(data, 'reflectivity', 0, 1).step(0.01).onChange(reflectivity => material.reflectivity = reflectivity);
-  //   folder.add(data, 'clearcoat', 0, 1).step(0.01).onChange(clearcoat => material.clearcoat = clearcoat);
-  // });
-  // stringMaterialInfo.folder.addColor(stringMaterialInfo.data, 'color').onChange(color => stringMaterialInfo.material.color.setHex(color));
-  // stringMaterialInfo.folder.add(stringMaterialInfo.data, 'linewidth', 0, 10).step(0.01).onChange(linewidth => stringMaterialInfo.material.linewidth = linewidth);
-  
-
-  // -------- scene -------- //
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.01, 1000);
-
-  scene.background = backgroundColor;
-  
+  // -------- geometry -------- //
   const sphereGeometry = new THREE.SphereGeometry(1);
   const cylinderGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8, 1, true);
   const boxGeometry = new RoundedBoxGeometry(12, 1, 6, 2, 0.2);
   const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1, -1, 0), new THREE.Vector3(-1, 1, 0), new THREE.Vector3(1, 1, 0));
   const arcGeometry = new THREE.TubeGeometry(arcCurve, 16, 0.2, 8);
 
-  // -------- Newton's Cradle -------- //
+  // -------- cradle -------- //
   const cradle = new THREE.Group();
   cradle.position.set(0, -2, 0);
   const platform = new THREE.Mesh(boxGeometry, platformMaterial);
@@ -156,7 +105,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   const stringGeometry = new THREE.BufferGeometry().setFromPoints(stringPoints);
 
   const ballComponents = [];
-  [[3.2, 8, 0], [-3.2, 8, 0], [1.6, 8, 0], [-1.6, 8, 0], [0, 8, 0]].forEach((i) => {
+  [[3.2, 8, 0], [1.6, 8, 0], [0, 8, 0], [-1.6, 8, 0],  [-3.2, 8, 0]].forEach((i) => {
     const ballComponent = new THREE.Group();
     ballComponents.push(ballComponent);
     const ball = new THREE.Mesh(sphereGeometry, ballMaterial);
@@ -171,10 +120,10 @@ const createNewtonCradleScene = (canvas, renderer) => {
     rails.add(ballComponent);
   });
 
-  const ball1 = ballComponents[0];
-  const ball2 = ballComponents[1];
+  const [ball1, ball2, ball3, ball4, ball5] = ballComponents;
 
-  const shadowTexture = createShadow();
+  // -------- shadow -------- //
+  const shadowTexture = createShadowTexture();
   const shadowGeometry = new THREE.PlaneGeometry();
   const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, map: shadowTexture });
   const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
@@ -193,9 +142,9 @@ const createNewtonCradleScene = (canvas, renderer) => {
   // -------- animation -------- //
   let rotation = 0;
   const animation = (time) => {
-    rotation = physics.maxAngle * Math.sin(time * 0.001 * physics.rate);
+    rotation = 0.5 * Math.sin(time * 0.001 * 3);
     ball1.rotation.z = rotation > 0 ? rotation : 0;
-    ball2.rotation.z = rotation < 0 ? rotation : 0;
+    ball5.rotation.z = rotation < 0 ? rotation : 0;
     controls.update();
   }
 
