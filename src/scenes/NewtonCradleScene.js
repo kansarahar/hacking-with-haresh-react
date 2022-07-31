@@ -3,6 +3,12 @@ import * as OIMO from 'three/examples/jsm/libs/OimoPhysics';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
+
 // import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
 const backgroundColor = new THREE.Color(0xfcfcfc);
@@ -161,9 +167,20 @@ const createNewtonCradleScene = (canvas, renderer) => {
   const pointer = new THREE.Vector2();
   const rayCaster = new THREE.Raycaster();
   const controls = new OrbitControls(camera, canvas);
+  const onPointerMove = (event) => {
+    outlinePass.selectedObjects = [];
+    pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+    pointer.y = -(event.offsetY / canvas.clientHeight) * 2 + 1;
+    rayCaster.setFromCamera(pointer, camera);
+    const intersects = rayCaster.intersectObjects(ballMeshes, true);
+    if (intersects.length > 0) {
+      const object = intersects[0].object;
+      outlinePass.selectedObjects = [object];
+    }
+  }
   const onClick = (event) => {
-    pointer.x = (event.offsetX / renderer.domElement.clientWidth) * 2 - 1;
-    pointer.y = -(event.offsetY / renderer.domElement.clientHeight) * 2 + 1;
+    pointer.x = (event.offsetX / canvas.clientWidth) * 2 - 1;
+    pointer.y = -(event.offsetY / canvas.clientHeight) * 2 + 1;
     rayCaster.setFromCamera(pointer, camera);
     const intersects = rayCaster.intersectObjects(ballMeshes, true);
     if (intersects.length > 0) {
@@ -179,6 +196,17 @@ const createNewtonCradleScene = (canvas, renderer) => {
     }
   }
   canvas.addEventListener('click', onClick);
+  canvas.addEventListener('pointermove', onPointerMove);
+
+  // -------- post-processing -------- //
+  const composer = new EffectComposer(renderer);
+  const renderPass = new RenderPass(scene, camera);
+  const outlinePass = new OutlinePass(new THREE.Vector2(renderer.domElement.clientWidth, renderer.domElement.clientHeight), scene, camera);
+  const effectFXAA = new ShaderPass(FXAAShader);
+  effectFXAA.uniforms['resolution'].value.set(1 / window.devicePixelRatio / canvas.offsetWidth, 1 / window.devicePixelRatio / canvas.offsetHeight);
+  composer.addPass(renderPass);
+  composer.addPass(outlinePass);
+  composer.addPass(effectFXAA);
   
   // -------- animation -------- //
   const animation = (time) => {
@@ -193,6 +221,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
       string.rotation.z = dir.x > 0 ? rotationAngle : -rotationAngle;
     });
     controls.update();
+    composer.render();
   }
 
   const destroy = () => {
@@ -211,6 +240,9 @@ const createNewtonCradleScene = (canvas, renderer) => {
     shadowTexture.dispose();
 
     controls.dispose();
+
+    canvas.removeEventListener('click', onClick);
+    canvas.removeEventListener('pointermove', onPointerMove);
   }
 
   return { scene, camera, animation, destroy };

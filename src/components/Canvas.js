@@ -44,7 +44,7 @@ function Canvas(props) {
       aFrameReq = requestAnimationFrame(animate);
       // stats.begin();
       animation(time);
-      renderer.render(scene, camera);
+      // renderer.render(scene, camera);
       // stats.end();
     };
     aFrameReq = requestAnimationFrame(animate);
