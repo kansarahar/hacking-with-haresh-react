@@ -1,10 +1,14 @@
 import * as THREE from 'three';
+import * as OIMO from 'three/examples/jsm/libs/OimoPhysics';
+import { oimo } from 'three/examples/jsm/libs/OimoPhysics/OimoPhysics';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry';
 // import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
 const backgroundColor = new THREE.Color(0xfcfcfc);
+const sphereSize = 0.12;
+const railRadius = 0.04;
 
 const createShadowTexture = () => {
   const dim = 128;
@@ -30,19 +34,44 @@ const createShadowTexture = () => {
 }
 
 const createNewtonCradleScene = (canvas, renderer) => {
-  
+  // -------- physics -------- //
+  const frameRate = 60;
+  const world = new OIMO.World(2, new OIMO.Vec3(0, -9.8, 0));
+  const sphereShape = new OIMO.OSphereGeometry(sphereSize);
+
+  const dummyBody = new OIMO.RigidBody(new OIMO.RigidBodyConfig());
+  const ballBodies = [-0.625, -0.375, -0.125, 0.125, 0.375, 0.625].map((xpos) => {
+    const shapeConfig = new OIMO.ShapeConfig();
+    shapeConfig.geometry = sphereShape;
+    shapeConfig.restitution = 1;
+    
+    const bodyConfig = new OIMO.RigidBodyConfig();
+    bodyConfig.type = OIMO.RigidBodyType.DYNAMIC;
+    bodyConfig.position = new OIMO.Vec3(xpos, -1, 0);
+    bodyConfig.linearDamping = 0.1;
+    const body = new OIMO.RigidBody(bodyConfig);
+    body.addShape(new OIMO.Shape(shapeConfig));
+
+    const hingeJointConfig = new OIMO.RevoluteJointConfig();
+    hingeJointConfig.init(body, dummyBody, new OIMO.Vec3(xpos, 0, 0), new OIMO.Vec3(0, 0, 1));
+    const hingeJoint = new OIMO.RevoluteJoint(hingeJointConfig);
+
+    world.addRigidBody(body);
+    world.addJoint(hingeJoint);
+
+    return body;
+  });
+
+  // -------- scene -------- //
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   const envMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
-  
-  
-  
-  // -------- scene -------- //
+
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.01, 1000);
   
   scene.background = backgroundColor;
-  
-  // -------- materials -------- //
+
+  // materials
   const ballMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x8c8c8c,
     metalness: 1,
@@ -64,106 +93,119 @@ const createNewtonCradleScene = (canvas, renderer) => {
     linewidth: 1,
   });
 
-  // -------- geometry -------- //
-  const sphereGeometry = new THREE.SphereGeometry(1);
-  const cylinderGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 8, 1, true);
-  const boxGeometry = new RoundedBoxGeometry(12, 1, 6, 2, 0.2);
-  const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1, -1, 0), new THREE.Vector3(-1, 1, 0), new THREE.Vector3(1, 1, 0));
-  const arcGeometry = new THREE.TubeGeometry(arcCurve, 16, 0.2, 8);
+  // geometry
+  const sphereGeometry = new THREE.SphereBufferGeometry(sphereSize);
+  const cylinderGeometry = new THREE.CylinderBufferGeometry(railRadius, railRadius, 1, 8, 1, true);
+  const roundedBoxGeometry = new RoundedBoxGeometry(2.5, 0.2, 1.5, 2, 0.05);
+  const arcCurve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-0.1, -0.1, 0), new THREE.Vector3(-0.1, 0.1, 0), new THREE.Vector3(0.1, 0.1, 0));
+  const arcGeometry = new THREE.TubeBufferGeometry(arcCurve, 16, railRadius, 8);
 
-  // -------- cradle -------- //
+  // meshes
   const cradle = new THREE.Group();
-  cradle.position.set(0, -2, 0);
-  const platform = new THREE.Mesh(boxGeometry, platformMaterial);
-  platform.position.set(0, -0.5, 0);
-  const rails = new THREE.Group();
-  cradle.add(platform);
-  [[6, 3, 3], [6, 3, -3], [-6, 3, 3], [-6, 3, -3]].forEach((i) => {
-    const support = new THREE.Mesh(cylinderGeometry, platformMaterial);
-    support.position.set(...i);
-    support.scale.set(1, 6, 1);
-    rails.add(support);
-  });
-  [[0, 8, 3], [0, 8, -3]].forEach((i) => {
-    const support = new THREE.Mesh(cylinderGeometry, platformMaterial);
-    support.position.set(...i);
-    support.scale.set(1, 8, 1);
-    support.rotation.set(0, 0, Math.PI/2);
-    rails.add(support);
-    const leftArc = new THREE.Mesh(arcGeometry, platformMaterial);
-    const rightArc = new THREE.Mesh(arcGeometry, platformMaterial);
-    rightArc.rotation.set(0, Math.PI, 0);
-    leftArc.position.set(-5, i[1]-1, i[2]);
-    rightArc.position.set(5, i[1]-1, i[2]);
-    rails.add(leftArc);
-    rails.add(rightArc);
-  });
-  cradle.add(rails);
-  rails.scale.set(0.8, 0.8, 0.8);
+  const ballGroup = new THREE.Group();
+  const stringGroup = new THREE.Group();
+  const platformGroup = new THREE.Group();
+  cradle.add(ballGroup);
+  cradle.add(stringGroup);
+  cradle.add(platformGroup);
+  cradle.position.y = 1;
 
-  const stringPoints = [new THREE.Vector3(0, 6, 3), new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 6, -3)];
-  const stringGeometry = new THREE.BufferGeometry().setFromPoints(stringPoints);
-
-  const ballComponents = [];
-  [[3.2, 8, 0], [1.6, 8, 0], [0, 8, 0], [-1.6, 8, 0],  [-3.2, 8, 0]].forEach((i) => {
-    const ballComponent = new THREE.Group();
-    ballComponents.push(ballComponent);
-    const ball = new THREE.Mesh(sphereGeometry, ballMaterial);
-    ball.scale.set(0.8, 0.8, 0.8);
-    ball.position.set(0, -6, 0);
-    ballComponent.add(ball);
+  const ballMeshes = ballBodies.map((ballBody) => {
+    const ballMesh = new THREE.Mesh(sphereGeometry, ballMaterial);
+    ballMesh.position.copy(ballBody.getPosition());
+    ballGroup.add(ballMesh);
+    return ballMesh;
+  });
+  const stringMeshes = ballMeshes.map((ballMesh) => {
+    const stringPoints = [new THREE.Vector3(0, 0, 0.5), new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, -0.5)];
+    const stringGeometry = new THREE.BufferGeometry().setFromPoints(stringPoints);
     const string = new THREE.Line(stringGeometry, stringMaterial);
-    string.position.set(0, -6, 0);
-    ballComponent.add(string);
-    ballComponent.position.set(...i);
-    ballComponent.rotation.set(0, 0, 0);
-    rails.add(ballComponent);
+    string.position.x = ballMesh.position.x;
+    stringGroup.add(string);
+    return string;
   });
+  const supportMeshes = [-0.5, 0.5].map((zpos) => {
+    const railMaterial = platformMaterial;
+    const supports = new THREE.Group();
+    const leftSupport = new THREE.Mesh(cylinderGeometry, railMaterial);
+    const rightSupport = new THREE.Mesh(cylinderGeometry, railMaterial);
+    leftSupport.position.set(-1, -0.82, zpos);
+    leftSupport.scale.y = 1.25;
+    rightSupport.position.set(1, -0.82, zpos);
+    rightSupport.scale.y = 1.25;
+    const rail = new THREE.Mesh(cylinderGeometry, railMaterial);
+    rail.position.set(0, 0, zpos);
+    rail.rotation.z = Math.PI / 2;
+    rail.scale.set(1, 1.6, 1);
+    const leftArc = new THREE.Mesh(arcGeometry, railMaterial);
+    const rightArc = new THREE.Mesh(arcGeometry, railMaterial);
+    leftArc.position.set(-0.9, -0.1, zpos);
+    rightArc.position.set(0.9, -0.1, zpos);
+    rightArc.rotation.y = Math.PI;
+    supports.add(leftSupport);
+    supports.add(rightSupport);
+    supports.add(rail);
+    supports.add(leftArc);
+    supports.add(rightArc);
+    platformGroup.add(supports);
+    
+    return supports;
+  });
+  const platformMesh = new THREE.Mesh(roundedBoxGeometry, platformMaterial);
+  platformMesh.position.y = -1.5;
+  platformGroup.add(platformMesh);
 
-  const [ball1, ball2, ball3, ball4, ball5] = ballComponents;
+  ballBodies[0].setPosition(new OIMO.Vec3(-1, 0, 0));
 
-  // -------- shadow -------- //
+  // shadow
   const shadowTexture = createShadowTexture();
   const shadowGeometry = new THREE.PlaneGeometry();
   const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, map: shadowTexture });
   const shadowMesh = new THREE.Mesh(shadowGeometry, shadowMaterial);
   shadowMesh.rotation.x = -Math.PI / 2;
-  shadowMesh.scale.set(13, 7, 7);
-  shadowMesh.position.y = -5;
-  
+  shadowMesh.scale.set(2.5, 1.5, 1);
+  shadowMesh.position.y = -2.1;
+  cradle.add(shadowMesh);
+
   scene.add(cradle);
-  scene.add(shadowMesh);
-  camera.position.z = 14;
-  camera.position.y = 8;
-  camera.position.x = -7;
+  camera.position.z = 3;
+  camera.position.y = 1.5;
+  camera.position.x = -1.5;
   
   const controls = new OrbitControls(camera, canvas);
   
   // -------- animation -------- //
-  let rotation = 0;
   const animation = (time) => {
-    rotation = 0.5 * Math.sin(time * 0.001 * 3);
-    ball1.rotation.z = rotation > 0 ? rotation : 0;
-    ball5.rotation.z = rotation < 0 ? rotation : 0;
+    world.step(1 / frameRate);
+    ballMeshes.forEach((ballMesh, idx) => {
+      const ballPosition = ballBodies[idx].getPosition();
+      const string = stringMeshes[idx];
+      ballMesh.position.copy(ballPosition);
+      const dir = new THREE.Vector3().subVectors(ballPosition, string.position).normalize();
+      dir.y = dir.y > -1 ? dir.y : -1;
+      const rotationAngle = Math.acos(-dir.y);
+      string.rotation.z = dir.x > 0 ? rotationAngle : -rotationAngle;
+
+    });
     controls.update();
   }
 
   const destroy = () => {
-    ballMaterial.dispose();
-    platformMaterial.dispose();
-    stringMaterial.dispose();
-    shadowMaterial.dispose();
+    // ballMaterial.dispose();
+    // platformMaterial.dispose();
+    // stringMaterial.dispose();
+    // shadowMaterial.dispose();
 
-    sphereGeometry.dispose();
-    cylinderGeometry.dispose();
-    boxGeometry.dispose();
-    arcGeometry.dispose();
-    stringGeometry.dispose();
-    shadowGeometry.dispose();
+    // sphereGeometry.dispose();
+    // cylinderGeometry.dispose();
+    // boxGeometry.dispose();
+    // arcGeometry.dispose();
+    // stringGeometry.dispose();
+    // shadowGeometry.dispose();
 
-    shadowTexture.dispose();
+    // shadowTexture.dispose();
 
-    controls.dispose();
+    // controls.dispose();
   }
 
   return { scene, camera, animation, destroy };

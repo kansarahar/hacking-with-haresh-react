@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { WebGLRenderer } from 'three';
 // import Stats from 'three/examples/jsm/libs/stats.module';
 
-import createNewtonCradleScene from '../scenes/PhysicsTestScene';
+import createNewtonCradleScene from '../scenes/NewtonCradleScene';
 
 function Canvas(props) {
 
