@@ -36,7 +36,7 @@ const createShadowTexture = () => {
 const createNewtonCradleScene = (canvas, renderer) => {
   // -------- physics -------- //
   const frameRate = 60;
-  const world = new OIMO.World(2, new OIMO.Vec3(0, -9.8, 0));
+  const world = new OIMO.World(2, new OIMO.Vec3(0, -10, 0));
   const sphereShape = new OIMO.OSphereGeometry(sphereSize);
 
   const dummyBody = new OIMO.RigidBody(new OIMO.RigidBodyConfig());
@@ -48,7 +48,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
     const bodyConfig = new OIMO.RigidBodyConfig();
     bodyConfig.type = OIMO.RigidBodyType.DYNAMIC;
     bodyConfig.position = new OIMO.Vec3(xpos, -1, 0);
-    bodyConfig.linearDamping = 0.1;
+    bodyConfig.linearDamping = 0.2;
     const body = new OIMO.RigidBody(bodyConfig);
     body.addShape(new OIMO.Shape(shapeConfig));
 
@@ -99,9 +99,10 @@ const createNewtonCradleScene = (canvas, renderer) => {
   cradle.add(platformGroup);
   cradle.position.y = 1;
 
-  const ballMeshes = ballBodies.map((ballBody) => {
+  const ballMeshes = ballBodies.map((ballBody, idx) => {
     const ballMesh = new THREE.Mesh(sphereGeometry, ballMaterial);
     ballMesh.position.copy(ballBody.getPosition());
+    ballMesh.name = idx;
     ballGroup.add(ballMesh);
     return ballMesh;
   });
@@ -139,7 +140,7 @@ const createNewtonCradleScene = (canvas, renderer) => {
   platformMesh.position.y = -1.5;
   platformGroup.add(platformMesh);
 
-  ballBodies[0].setPosition(new OIMO.Vec3(-1, 0, 0));
+  ballBodies[0].applyLinearImpulse(new OIMO.Vec3(0.01, 0, 0));
 
   // shadow
   const shadowTexture = createShadowTexture();
@@ -156,7 +157,28 @@ const createNewtonCradleScene = (canvas, renderer) => {
   camera.position.y = 1.5;
   camera.position.x = -1.5;
   
+  // -------- controls -------- //
+  const pointer = new THREE.Vector2();
+  const rayCaster = new THREE.Raycaster();
   const controls = new OrbitControls(camera, canvas);
+  const onClick = (event) => {
+    pointer.x = (event.offsetX / renderer.domElement.clientWidth) * 2 - 1;
+    pointer.y = -(event.offsetY / renderer.domElement.clientHeight) * 2 + 1;
+    rayCaster.setFromCamera(pointer, camera);
+    const intersects = rayCaster.intersectObjects(ballMeshes, true);
+    if (intersects.length > 0) {
+      const object = intersects[0].object;
+      ballBodies.forEach((ballBody, idx) => {
+        if (object.name < 3 && idx <= object.name) {
+          ballBody.applyLinearImpulse(new OIMO.Vec3(-0.015, 0, 0));
+        }
+        if (object.name >= 3 && idx >= object.name) {
+          ballBody.applyLinearImpulse(new OIMO.Vec3(0.015, 0, 0));
+        }
+      });
+    }
+  }
+  canvas.addEventListener('click', onClick);
   
   // -------- animation -------- //
   const animation = (time) => {
